@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#050607" />
+  <title>BODYCAM // NIGHTFALL</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="menu">
+  <canvas id="game"></canvas>
+
+  <!-- ======================================================================
+       BODYCAM HUD
+  ======================================================================= -->
+  <div id="hud" class="hidden">
+    <div class="hud-frame" aria-hidden="true"></div>
+
+    <div class="hud-top">
+      <div class="rec-block">
+        <div class="rec-line"><span class="rec-dot"></span><span class="rec-label">REC</span><span class="rec-time" id="recTime">03:17:42:08</span></div>
+        <div class="rec-sub">UNIT 07 <span>/</span> CAM 04 <span>/</span> BODY-WORN</div>
+      </div>
+
+      <div class="mission-center">
+        <div class="mission-label">MISSION CLOCK</div>
+        <div class="mission-clock" id="missionClock">00:00</div>
+      </div>
+
+      <div class="system-block">
+        <div class="system-row"><span class="sig-bars"><i></i><i></i><i></i><i></i></span><span>LINK 98%</span></div>
+        <div class="battery-row">
+          <div class="battery"><div class="battery-fill" id="batteryFill"></div></div>
+          <span id="batteryText">100%</span>
+        </div>
+        <div class="system-sub">20 NOV 2026 <span>/</span> 03:17 LOCAL</div>
+      </div>
+    </div>
+
+    <div class="compass-wrap">
+      <div class="compass">
+        <div class="compass-ticks"></div>
+        <div class="compass-needle"></div>
+        <div id="objMarker" class="obj-marker hidden"><span class="obj-chev">◆</span><span id="objMarkerLabel">MANIFEST 20M</span></div>
+      </div>
+      <div class="compass-readout"><span id="heading">000</span><span class="deg">°</span><span id="cardinal">N</span></div>
+    </div>
+
+    <div class="obj-panel">
+      <div class="panel-label">ACTIVE OBJECTIVE</div>
+      <div class="obj-title" id="objectiveTitle">RECOVER THE MANIFEST</div>
+      <div class="obj-sub" id="objectiveSub">LAB 03 // WEST WING</div>
+      <div class="obj-list">
+        <div class="obj-item" id="objIntel"><span class="box"></span><span>RECOVER MANIFEST</span><span class="count" id="intelCount">0 / 1</span></div>
+        <div class="obj-item" id="objHostiles"><span class="box"></span><span>NEUTRALIZE HOSTILES</span><span class="count" id="hostileCount">0 / 11</span></div>
+        <div class="obj-item locked" id="objExfil"><span class="box"></span><span>REACH EXTRACTION</span><span class="count">LOCKED</span></div>
+      </div>
+    </div>
+
+    <div class="vitals">
+      <div class="vitals-head"><span class="pulse-dot"></span><span>VITALS</span><span class="vitals-status">LIVE</span></div>
+      <div class="health-row">
+        <div class="health-num" id="healthNum">100</div>
+        <div class="health-meta">
+          <div class="health-label">OFFICER STATUS</div>
+          <div class="health-track"><div class="health-fill" id="healthBar"></div></div>
+        </div>
+      </div>
+      <div class="stamina-row"><span>STAMINA</span><div class="stamina-track"><div class="stamina-fill" id="staminaBar"></div></div></div>
+      <div class="vitals-foot"><span>HR 96 BPM</span><span>O₂ 98%</span><span>GPS 34.05N</span></div>
+    </div>
+
+    <div class="ammo-block">
+      <div class="weapon-line"><span id="weaponName">MK18 / 5.56</span><span class="mode" id="fireMode">AUTO</span></div>
+      <div class="ammo-line"><span class="ammo-mag" id="ammoMag">30</span><span class="ammo-slash">/</span><span class="ammo-reserve" id="ammoReserve">150</span></div>
+      <div class="ammo-foot"><span>5.56 NATO</span><span class="ammo-hint">R RELOAD</span></div>
+      <div class="weapon-slots" id="weaponSlots">
+        <div class="slot active" data-weapon="rifle"><span>1</span> MK18</div>
+        <div class="slot" data-weapon="pistol"><span>2</span> M17</div>
+      </div>
+    </div>
+
+    <div class="radio" id="radio">
+      <div class="radio-head"><span class="radio-dot"></span> RADIO <span class="radio-freq">// 141.7</span></div>
+      <div class="radio-text" id="radioText"></div>
+    </div>
+
+    <div class="killfeed" id="killfeed"></div>
+
+    <div id="crosshair">
+      <span class="ch-line ch-t"></span>
+      <span class="ch-line ch-b"></span>
+      <span class="ch-line ch-l"></span>
+      <span class="ch-line ch-r"></span>
+      <span class="ch-dot"></span>
+    </div>
+    <div id="hitmarker"><i></i><i></i><i></i><i></i></div>
+    <div id="damageDir"></div>
+
+    <div id="interact" class="interact">
+      <span class="key">E</span>
+      <span id="interactText">RECOVER THE MANIFEST</span>
+    </div>
+
+    <div id="lockHint" class="lock-hint hidden">CLICK TO RE-CAPTURE MOUSE FEED</div>
+
+    <div class="hud-foot">
+      <span>BODYCAM 04 // 1920×1080 // 30FPS</span>
+      <span class="hud-foot-mid">EVIDENCE CAPTURE ACTIVE</span>
+      <span>ENCRYPTED // AES-256</span>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MAIN MENU
+  ======================================================================= -->
+  <div id="menu">
+    <div class="menu-shade"></div>
+    <div class="menu-grid" aria-hidden="true"></div>
+
+    <header class="menu-top">
+      <div class="menu-live"><span class="rec-dot"></span> LIVE FEED <span class="sep">/</span> CAM 04</div>
+      <div class="menu-case">CASE FILE <span>#N7-0413</span></div>
+    </header>
+
+    <section class="brand">
+      <div class="eyebrow"><span class="tick"></span> TACTICAL BODYCAM SYSTEM <span class="eyebrow-sub">// UNIT 07</span></div>
+      <h1>BODY<span>CAM</span></h1>
+      <div class="brand-rule"></div>
+      <div class="operation">OPERATION <strong>NIGHTFALL</strong></div>
+      <p class="brand-copy">A real-time evidence capture simulation. Every frame is recorded. Every shot is accountable.</p>
+      <div class="brand-tags">
+        <span>REAL-TIME</span>
+        <span>TACTICAL FPS</span>
+        <span>18+</span>
+      </div>
+    </section>
+
+    <aside class="briefing">
+      <div class="briefing-top"><span>MISSION BRIEF</span><span class="clearance">CLEARANCE: EYES ONLY</span></div>
+      <div class="briefing-body">
+        <div class="brief-loc">BLACKSITE WAREHOUSE <span>// BAY 04</span></div>
+        <p>Unit 07, you are first through the door. A courier cell is moving a stolen manifest through the old freight terminal. Recover the manifest, clear the site, and reach the north gate before dawn.</p>
+        <div class="brief-grid">
+          <div><span>ENTRY</span><strong>03:17</strong></div>
+          <div><span>THREAT</span><strong>ARMED</strong></div>
+          <div><span>EXFIL</span><strong>NORTH GATE</strong></div>
+        </div>
+        <div class="brief-warning"><span>!</span> BODYCAM FEED IS LIVE. MAINTAIN VISUAL.</div>
+      </div>
+      <button id="deployBtn" class="deploy-btn"><span class="btn-label">DEPLOY UNIT</span><span class="btn-arrow">→</span></button>
+      <button id="controlsBtn" class="ghost-btn">CONTROLS &amp; EQUIPMENT</button>
+      <div class="briefing-foot"><span>REC ●</span><span>ENCRYPTED UPLINK</span><span>03:17:42</span></div>
+    </aside>
+
+    <footer class="menu-bottom">
+      <div class="menu-bottom-left"><span class="barcode"></span><span>FICTIONAL TRAINING SIMULATION // NOT FOR OPERATIONAL USE</span></div>
+      <div class="menu-bottom-right"><span>WASD MOVE</span><span>MOUSE AIM</span><span>LMB FIRE</span><span>R RELOAD</span></div>
+    </footer>
+  </div>
+
+  <!-- ======================================================================
+       CONTROLS
+  ======================================================================= -->
+  <div id="controls" class="overlay hidden">
+    <div class="overlay-card controls-card">
+      <div class="overlay-head"><span>FIELD CONTROLS</span><span class="overlay-code">UNIT 07 / EQUIPMENT</span></div>
+      <div class="controls-grid">
+        <div class="control-row"><span class="key">W A S D</span><span>MOVE</span></div>
+        <div class="control-row"><span class="key">MOUSE</span><span>LOOK / AIM</span></div>
+        <div class="control-row"><span class="key">LMB</span><span>FIRE</span></div>
+        <div class="control-row"><span class="key">RMB</span><span>AIM DOWN SIGHTS</span></div>
+        <div class="control-row"><span class="key">SHIFT</span><span>SPRINT</span></div>
+        <div class="control-row"><span class="key">C</span><span>CROUCH</span></div>
+        <div class="control-row"><span class="key">SPACE</span><span>JUMP</span></div>
+        <div class="control-row"><span class="key">R</span><span>RELOAD</span></div>
+        <div class="control-row"><span class="key">1 / 2</span><span>SWITCH WEAPON</span></div>
+        <div class="control-row"><span class="key">F</span><span>FLASHLIGHT</span></div>
+        <div class="control-row"><span class="key">E</span><span>INTERACT</span></div>
+        <div class="control-row"><span class="key">ESC</span><span>PAUSE FEED</span></div>
+      </div>
+      <div class="controls-note">Audio is best experienced with headphones. Click DEPLOY to grant mouse capture.</div>
+      <button id="closeControls" class="ghost-btn wide">RETURN TO BRIEF</button>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       PAUSE
+  ======================================================================= -->
+  <div id="pause" class="overlay hidden">
+    <div class="overlay-card pause-card">
+      <div class="overlay-head"><span>FEED PAUSED</span><span class="overlay-code">REC // STANDBY</span></div>
+      <div class="pause-title">HOLD <span>POSITION</span></div>
+      <div class="pause-sub">Mouse capture released. The operation is still live.</div>
+      <div class="pause-stats" id="pauseStats"></div>
+      <button id="resumeBtn" class="deploy-btn"><span class="btn-label">RESUME FEED</span><span class="btn-arrow">→</span></button>
+      <div class="pause-actions">
+        <button id="restartBtn" class="ghost-btn">RESTART OP</button>
+        <button id="quitBtn" class="ghost-btn">ABORT TO MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       END SCREEN
+  ======================================================================= -->
+  <div id="end" class="overlay hidden">
+    <div class="overlay-card end-card">
+      <div class="overlay-head"><span id="endTag">FEED ARCHIVED // 03:17</span><span class="overlay-code">UNIT 07 / CAM 04</span></div>
+      <div class="end-kicker">OPERATION NIGHTFALL</div>
+      <div class="end-title" id="endTitle">OPERATION COMPLETE</div>
+      <div class="end-sub" id="endSub">UNIT 07 — EXTRACTION CONFIRMED</div>
+      <div class="end-stats" id="endStats"></div>
+      <div class="end-actions">
+        <button id="retryBtn" class="deploy-btn"><span class="btn-label">REDEPLOY</span><span class="btn-arrow">→</span></button>
+        <button id="menuBtn" class="ghost-btn">RETURN TO MENU</button>
+      </div>
+      <div class="end-foot">ALL FOOTAGE IS SUBJECT TO REVIEW // INTERNAL AFFAIRS</div>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
